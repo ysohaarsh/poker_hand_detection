@@ -2,13 +2,9 @@ from ultralytics import YOLO
 import cv2
 import cvzone
 import math
+import argparse
 import PokerHandFunction
 
-cap = cv2.VideoCapture(0)  # For Webcam
-cap.set(3, 1280)
-cap.set(4, 720)
-
-model = YOLO("playingCards.pt")
 classNames = ['10C', '10D', '10H', '10S',
               '2C', '2D', '2H', '2S',
               '3C', '3D', '3H', '3S',
@@ -23,36 +19,59 @@ classNames = ['10C', '10D', '10H', '10S',
               'KC', 'KD', 'KH', 'KS',
               'QC', 'QD', 'QH', 'QS']
 
-while True:
-    success, img = cap.read()
-    results = model(img, stream=True)
-    hand = []
-    for r in results:
-        boxes = r.boxes
-        for box in boxes:
-            # Bounding Box
-            x1, y1, x2, y2 = box.xyxy[0]
-            x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
-            # cv2.rectangle(img,(x1,y1),(x2,y2),(255,0,255),3)
-            w, h = x2 - x1, y2 - y1
-            cvzone.cornerRect(img, (x1, y1, w, h))
-            # Confidence
-            conf = math.ceil((box.conf[0] * 100)) / 100
-            # Class Name
-            cls = int(box.cls[0])
 
-            cvzone.putTextRect(img, f'{classNames[cls]} {conf}', (max(0, x1), max(35, y1)), scale=1, thickness=1)
+def parse_args():
+    parser = argparse.ArgumentParser(description="Detect playing cards and name the poker hand.")
+    parser.add_argument("--source", default="0",
+                        help="webcam index (default 0) or path to a video file")
+    parser.add_argument("--model", default="playingCards.pt", help="path to the YOLO weights")
+    parser.add_argument("--conf", type=float, default=0.5, help="minimum detection confidence")
+    return parser.parse_args()
 
-            if conf > 0.5:
-                hand.append(classNames[cls])
 
-    print(hand)
-    hand = list(set(hand))
-    print(hand)
-    if len(hand) == 5:
-        results = PokerHandFunction.findPokerHand(hand)
-        print(results)
-        cvzone.putTextRect(img, f'Your Hand: {results}', (300, 75), scale=3, thickness=5)
+def main():
+    args = parse_args()
+    source = int(args.source) if args.source.isdigit() else args.source
+    cap = cv2.VideoCapture(source)
+    cap.set(3, 1280)
+    cap.set(4, 720)
+    model = YOLO(args.model)
 
-    cv2.imshow("Image", img)
-    cv2.waitKey(1)
+    while True:
+        success, img = cap.read()
+        if not success:  # camera unavailable or end of video
+            break
+        results = model(img, stream=True)
+        hand = []
+        for r in results:
+            for box in r.boxes:
+                # Bounding Box
+                x1, y1, x2, y2 = (int(v) for v in box.xyxy[0])
+                w, h = x2 - x1, y2 - y1
+                cvzone.cornerRect(img, (x1, y1, w, h))
+                # Confidence
+                conf = math.ceil((box.conf[0] * 100)) / 100
+                # Class Name
+                cls = int(box.cls[0])
+
+                cvzone.putTextRect(img, f'{classNames[cls]} {conf}', (max(0, x1), max(35, y1)),
+                                   scale=1, thickness=1)
+
+                if conf > args.conf:
+                    hand.append(classNames[cls])
+
+        hand = list(set(hand))
+        if len(hand) == 5:
+            result = PokerHandFunction.findPokerHand(hand)
+            cvzone.putTextRect(img, f'Your Hand: {result}', (300, 75), scale=3, thickness=5)
+
+        cv2.imshow("Image", img)
+        if cv2.waitKey(1) & 0xFF == ord("q"):
+            break
+
+    cap.release()
+    cv2.destroyAllWindows()
+
+
+if __name__ == "__main__":
+    main()
