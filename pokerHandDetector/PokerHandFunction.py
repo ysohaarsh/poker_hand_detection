@@ -22,6 +22,9 @@ def findPokerHand(hand):
         suits.append(suit)
 
     sortedRanks = sorted(ranks)
+    # Ace plays low in the A-2-3-4-5 straight ("wheel"): treat it as rank 1
+    if sortedRanks == [2, 3, 4, 5, 14]:
+        sortedRanks = [1, 2, 3, 4, 5]
 
     # Royal Flush and Straight Flush and Flush
     if suits.count(suits[0]) == 5: # Check for Flush

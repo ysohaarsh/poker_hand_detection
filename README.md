@@ -11,33 +11,41 @@ The project is equipped to recognize various playing card ranks and suits, makin
 
 ## Requirements
 
-- Python 3.7+
-- Ultralytics library (`pip install ultralytics`)
-- OpenCV (`pip install opencv-python`)
-- cvzone (`pip install cvzone`)
-- PokerHandFunction (Include instructions or a link to this custom module if it's not included in the project repository)
+- Python 3.9+
+- Dependencies pinned in `requirements.txt`:
+
+  ```bash
+  pip install -r requirements.txt
+  ```
+
+- `pokerHandDetector/PokerHandFunction.py` (included) classifies a 5-card hand.
+- YOLO weights `pokerHandDetector/playingCards.pt` (included).
 
 ## Usage
 
-1. Clone this repository to your local machine:
+1. Clone the repository and enter the detector folder:
 
    ```bash
    git clone https://github.com/ysohaarsh/poker_hand_detection.git
+   cd poker_hand_detection/pokerHandDetector
    ```
 
-2. Open a terminal and navigate to the project directory:
+2. Run the detector (webcam by default):
 
    ```bash
-   cd poker-hand-detection
+   python Poker-Hand-Detector.py
+   python Poker-Hand-Detector.py --source path/to/video.mp4 --conf 0.6
    ```
 
-3. Run the poker hand detection script:
+   Options: `--source` (webcam index or video file), `--model` (weights path, default
+   `playingCards.pt`), `--conf` (minimum confidence, default 0.5). Press `q` to quit.
 
-   ```bash
-   python poker_hand_detection.py
-   ```
+## Tests
 
-   This will launch the poker hand detection application using your webcam as the video source. You can also modify the script to use a different video source if needed.
+```bash
+pip install -r requirements-dev.txt
+python -m pytest
+```
 
 ## How it Works
 
@@ -45,7 +53,7 @@ The project is equipped to recognize various playing card ranks and suits, makin
 
 - Detected cards are labeled with their ranks and suits, and their positions are marked with corner rectangles.
 
-- The script collects the detected cards and analyzes them to determine the poker hand, displaying the result on the screen when a complete hand is detected.
+- When exactly five distinct cards are detected above the confidence threshold, the hand is classified and shown on screen.
 
 ## Credits
 
@@ -54,7 +62,3 @@ This project is inspired by Murtaza's Workshop object detection tutorial, which 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-```
-
-Please replace `"https://github.com/yourusername/poker-hand-detection.git"` with the actual URL of your GitHub repository, and ensure that you provide clear instructions or a link to the `PokerHandFunction` module if it's not included in the project repository. You can also customize other sections as needed.

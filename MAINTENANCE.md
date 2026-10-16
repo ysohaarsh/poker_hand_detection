@@ -1,0 +1,1 @@
+- 2026-10-16: ignore bytecode, pin requirements, argparse CLI + safe loop exit for detector, ace-low straight fix, add pytest tests (PR)
